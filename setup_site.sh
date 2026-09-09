@@ -68,6 +68,7 @@ fi
 # Путь к сайту
 SITE_PATH="/home/$LINUX_USER/subrosa"
 PUBLIC_PATH="$SITE_PATH/publ"
+USER_HOME="/home/$LINUX_USER"
 
 # Проверка существования сайта
 if [ ! -d "$SITE_PATH" ]; then
@@ -334,8 +335,11 @@ fi
 
 log_info "Настройка прав доступа..."
 
-# Правильные права для папки сайта
-chown -R "$LINUX_USER:$LINUX_USER" "$SITE_PATH"
+# ВАЖНО: Дать права на родительскую директорию www-data
+chmod 755 "$USER_HOME"
+
+# www-data должна быть владельцем публичной папки и её содержимого
+chown -R www-data:www-data "$PUBLIC_PATH"
 chmod 755 "$SITE_PATH"
 chmod 755 "$PUBLIC_PATH"
 find "$PUBLIC_PATH" -type f -exec chmod 644 {} \;
