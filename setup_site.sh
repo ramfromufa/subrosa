@@ -56,8 +56,7 @@ if [[ ! $DOMAIN =~ ^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a
     exit 1
 fi
 
-read -p "Введите имя пользователя Linux (обычно: $USER): " LINUX_USER
-LINUX_USER=${LINUX_USER:-$USER}
+LINUX_USER="${SUDO_USER:-$(whoami)}"
 
 # Проверка существования пользователя
 if ! id "$LINUX_USER" &>/dev/null; then
