@@ -98,6 +98,29 @@ log_info "Обновление системы..."
 apt-get update -qq
 apt-get upgrade -y -qq
 
+###############################################################################
+# FIREWALL (UFW)
+###############################################################################
+
+log_info "Настройка firewall (UFW)..."
+
+# Проверка установлен ли UFW
+if ! command -v ufw &> /dev/null; then
+    log_warn "UFW не установлен, пропускаю настройку firewall"
+else
+    # Включение UFW
+    ufw --force enable
+
+    # Разрешение SSH (важно!)
+    ufw allow 22/tcp comment "SSH"
+
+    # Разрешение HTTP и HTTPS
+    ufw allow 80/tcp comment "HTTP"
+    ufw allow 443/tcp comment "HTTPS"
+
+    log_info "Firewall настроен"
+fi
+
 log_info "Установка Nginx и Certbot..."
 apt-get install -y nginx certbot python3-certbot-nginx
 
@@ -352,29 +375,6 @@ for dir in "$SITE_PATH"/*; do
 done
 
 log_info "Права доступа установлены"
-
-###############################################################################
-# FIREWALL (UFW)
-###############################################################################
-
-log_info "Настройка firewall (UFW)..."
-
-# Проверка установлен ли UFW
-if ! command -v ufw &> /dev/null; then
-    log_warn "UFW не установлен, пропускаю настройку firewall"
-else
-    # Включение UFW
-    ufw --force enable
-
-    # Разрешение SSH (важно!)
-    ufw allow 22/tcp comment "SSH"
-
-    # Разрешение HTTP и HTTPS
-    ufw allow 80/tcp comment "HTTP"
-    ufw allow 443/tcp comment "HTTPS"
-
-    log_info "Firewall настроен"
-fi
 
 ###############################################################################
 # ЗАВЕРШЕНИЕ
