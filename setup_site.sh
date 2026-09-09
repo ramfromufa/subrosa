@@ -106,12 +106,91 @@ systemctl enable nginx
 systemctl start nginx
 
 ###############################################################################
-# НАСТРОЙКА NGINX
+# СОЗДАНИЕ ВРЕМЕННЫХ ДИРЕКТОРИЙ
 ###############################################################################
 
-log_info "Создание конфигурации Nginx для $DOMAIN..."
+log_info "Создание временных директорий для certbot..."
+mkdir -p /var/www/certbot/.well-known/acme-challenge
+
+###############################################################################
+# СОЗДАНИЕ ВРЕМЕННОЙ КОНФИГУРАЦИИ NGINX (только для HTTP)
+###############################################################################
+
+log_info "Создание временной конфигурации Nginx для получения сертификата..."
 
 NGINX_CONFIG="/etc/nginx/sites-available/$DOMAIN"
+
+# Временная конфигурация - только HTTP для ACME challenge
+cat > "$NGINX_CONFIG" << 'EOF'
+server {
+    listen 80;
+    listen [::]:80;
+    server_name DOMAIN_PLACEHOLDER;
+
+    # Разрешить ACME challenge для Let's Encrypt
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    # Остальное - редирект на HTTPS (после получения сертификата)
+    location / {
+        root PUBLIC_PATH_PLACEHOLDER;
+        index index.html index.htm;
+        try_files $uri $uri/ /index.html =404;
+    }
+}
+EOF
+
+# Замена плейсхолдеров
+sed -i "s|DOMAIN_PLACEHOLDER|$DOMAIN|g" "$NGINX_CONFIG"
+sed -i "s|PUBLIC_PATH_PLACEHOLDER|$PUBLIC_PATH|g" "$NGINX_CONFIG"
+
+# Включение сайта
+if [ ! -L "/etc/nginx/sites-enabled/$DOMAIN" ]; then
+    ln -s "$NGINX_CONFIG" "/etc/nginx/sites-enabled/$DOMAIN"
+fi
+
+# Удаление дефолтного сайта
+if [ -L "/etc/nginx/sites-enabled/default" ]; then
+    rm /etc/nginx/sites-enabled/default
+fi
+
+# Проверка и перезагрузка
+log_info "Проверка и применение временной конфигурации Nginx..."
+if ! nginx -t; then
+    log_error "Ошибка в конфигурации Nginx!"
+    exit 1
+fi
+
+systemctl reload nginx
+
+###############################################################################
+# НАСТРОЙКА CERTBOT И TLS
+###############################################################################
+
+log_info "Получение SSL сертификата от Let's Encrypt для $DOMAIN..."
+
+certbot certonly \
+    --webroot \
+    -w /var/www/certbot \
+    -d "$DOMAIN" \
+    --agree-tos \
+    --non-interactive \
+    --email "admin@$DOMAIN" \
+    --expand
+
+if [ $? -ne 0 ]; then
+    log_error "Ошибка при получении сертификата"
+    exit 1
+fi
+
+log_info "Сертификат успешно получен!"
+
+###############################################################################
+# СОЗДАНИЕ ФИНАЛЬНОЙ КОНФИГУРАЦИИ NGINX (с HTTPS)
+###############################################################################
+
+log_info "Создание окончательной конфигурации Nginx с HTTPS..."
 
 cat > "$NGINX_CONFIG" << 'EOF'
 # Перенаправление HTTP на HTTPS
@@ -133,11 +212,12 @@ server {
 
 # HTTPS сервер
 server {
-    listen 443 ssl http2;
-    listen [::]:443 ssl http2;
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    http2 on;
     server_name DOMAIN_PLACEHOLDER;
 
-    # SSL сертификаты (будут созданы certbot'ом)
+    # SSL сертификаты
     ssl_certificate /etc/letsencrypt/live/DOMAIN_PLACEHOLDER/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/DOMAIN_PLACEHOLDER/privkey.pem;
 
@@ -209,57 +289,17 @@ EOF
 sed -i "s|DOMAIN_PLACEHOLDER|$DOMAIN|g" "$NGINX_CONFIG"
 sed -i "s|PUBLIC_PATH_PLACEHOLDER|$PUBLIC_PATH|g" "$NGINX_CONFIG"
 
-# Включение сайта
-if [ ! -L "/etc/nginx/sites-enabled/$DOMAIN" ]; then
-    ln -s "$NGINX_CONFIG" "/etc/nginx/sites-enabled/$DOMAIN"
-fi
-
-# Удаление дефолтного сайта если это нужно
-if [ -L "/etc/nginx/sites-enabled/default" ]; then
-    rm /etc/nginx/sites-enabled/default
-fi
-
 ###############################################################################
-# ПРОВЕРКА И ПРИМЕНЕНИЕ КОНФИГУРАЦИИ NGINX
+# ПРИМЕНЕНИЕ ФИНАЛЬНОЙ КОНФИГУРАЦИИ
 ###############################################################################
 
-log_info "Проверка конфигурации Nginx..."
+log_info "Проверка финальной конфигурации Nginx..."
 if ! nginx -t; then
     log_error "Ошибка в конфигурации Nginx!"
     exit 1
 fi
 
-log_info "Перезагрузка Nginx..."
-systemctl reload nginx
-
-###############################################################################
-# СОЗДАНИЕ ВРЕМЕННЫХ ДИРЕКТОРИЙ
-###############################################################################
-
-log_info "Создание временных директорий для certbot..."
-mkdir -p /var/www/certbot/.well-known/acme-challenge
-
-###############################################################################
-# НАСТРОЙКА CERTBOT И TLS
-###############################################################################
-
-log_info "Получение SSL сертификата от Let's Encrypt для $DOMAIN..."
-
-certbot certonly \
-    --webroot \
-    -w /var/www/certbot \
-    -d "$DOMAIN" \
-    --agree-tos \
-    --non-interactive \
-    --email "admin@$DOMAIN" \
-    --expand
-
-if [ $? -ne 0 ]; then
-    log_error "Ошибка при получении сертификата"
-    exit 1
-fi
-
-log_info "Перезагрузка Nginx после получения сертификата..."
+log_info "Перезагрузка Nginx с финальной конфигурацией..."
 systemctl reload nginx
 
 ###############################################################################
