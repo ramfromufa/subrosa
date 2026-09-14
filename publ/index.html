@@ -3,86 +3,160 @@
 <head>
     <meta charset="UTF-8">
     <!-- Базовые метатеги для поисковиков -->
-    <title>Клиентское AI-приложение с полным шифрованием</title>
-    <meta name="description" content="Веб-приложение нового поколения, созданное искусственным интеллектом. Работает исключительно в вашем браузере (Client-Side HTML/JS). Полное сквозное шифрование данных: приватность по умолчанию.">
+    <title id="meta-title">Клиентское AI-приложение с полным шифрованием</title>
+    <meta name="description" id="meta-desc" content="Веб-приложение нового поколения, созданное искусственным интеллектом. Работает исключительно в вашем браузере (Client-Side HTML/JS). Полное сквозное шифрование данных: приватность по умолчанию.">
     <meta name="keywords" content="client-side app, local javascript, ai generated web, encrypted data, html5, zero-knowledge, автономный сайт">
     <meta name="robots" content="index, follow">
-
+    
     <!-- Защита от индексации конфиденциальных данных (на всякий случай) -->
     <meta name="referrer" content="no-referrer">
 
     <!-- Микроразметка Open Graph (для красивых ссылок в Telegram, Discord, VK) -->
     <meta property="og:type" content="website">
-    <meta property="og:title" content="Автономное Client-Side Приложение">
-    <meta property="og:description" content="Код написан ИИ, исполняется только в браузере. Данные полностью зашифрованы и не уходят на сервер.">
+    <meta property="og:title" id="og-title" content="Автономное Client-Side Приложение">
+    <meta property="og:description" id="og-desc" content="Код написан ИИ, исполняется только в браузере. Данные полностью зашифрованы и не уходят на сервер.">
     <meta property="og:url" content="https://ramfromufa.com">
     <meta property="og:image" content="https://ramfromufa.com">
 
     <!-- Техническая адаптивность под мобильные устройства -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body { font-family: sans-serif; margin: 40px; }
-        h1, h2, h3, h4, h5, h6 {font-family: "Segoe UI", Arial, sans-serif;}
-        .container { max-width: 500px; margin: 0 auto; }
-        input { padding: 8px; width: 60%; }
-        button { padding: 8px 15px; }
-        #result { margin-top: 20px; padding: 10px; border: 1px solid #ccc; display: none; }
+        body {
+            font-family: sans-serif;
+            margin: 4px;
+        }
+        
+        .input-group {
+            display: flex;
+            width: 100%;
+        }
+
+        .input-group input {
+            flex-grow: 1;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+
+        .input-group button {
+            padding: 8px;
+            white-space: nowrap;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .output {
+            padding: 8px;
+            margin-top: 4px;
+            box-sizing: border-box;
+        }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>Распродажа деревянных членов ГКЧП СССР. Вводи промокод, Товарищ!</h2>
-    <label for="numberInput">Только циферки, контингент не надо. Например, количество ягуаров в гараже или личном зоопарке.</label></br></br>
-    <input type="number" id="numberInput" placeholder="00111111">
-    <button onclick="checkHash()">Нажми на кнопку</button>
-    
-    <div id="result"></div>
-    </br></br>
-    <!-- Кнопка копирования -->
-    <button id="copyBtn">И скопируй результат</button></br></br>
-    <img src="001.png" alt="Ширли-мырли" style="width: 100%; height: auto;">
-</div>
+    <div class="input-group">
+        <button id="langBtn" onclick="toggleLanguage()" style="margin-right: 4px;">RU</button>
+        <input type="number" id="numberInput" style="margin-right: 4px;" placeholder="жду ключ">
+        <button style="margin-right: 4px;" onclick="checkHash()" id="actionBtn">Нажми на кнопку</button>
+        <button id="copyBtn">И скопируй результат</button>
+    </div>
+    <div class="output" id="result"></div>
 
-<script>
-document.getElementById('numberInput').addEventListener('keydown', function(event) {
-    if (event.key === 'Enter') {
-        event.preventDefault();
-        checkHash();
-    }
-});
+    <script>
+        // Глобальный массив (объект) перевода всех элементов сайта
+        const translations = {
+            ru: {
+                bg: "",
+                ph: "жду ключ",
+                title: "Клиентское AI-приложение с полным шифрованием",
+                desc: "Веб-приложение нового поколения, созданное искусственным интеллектом. Работает исключительно в вашем браузере (Client-Side HTML/JS). Полное сквозное шифрование данных: приватность по умолчанию.",
+                ogTitle: "Автономное Client-Side Приложение",
+                ogDesc: "Код написан ИИ, исполняется только в браузере. Данные полностью зашифрованы и не уходят на сервер.",
+                actionBtn: "Нажми на кнопку",
+                copyBtn: "И скопируй результат",
+                helpText: "<b>И твоя мечта осуществится. Сейчас всё объясню.</b></br></br>В поле ввода необходимо набрать цифровой ключ. Если для этого ключа у меня будут какие-либо данные, они появятся на экране вместо этой короткой объяснительной заметки. Вот пример рабочего ключа: 00111111",
+            },
+            en: {
+                bg: "",
+                ph: "waiting for the key",
+                title: "Client-Side Fully Encrypted AI App",
+                desc: "Next-generation web application built by AI. Runs exclusively in your browser (Client-Side HTML/JS). Full end-to-end data encryption: privacy by default.",
+                ogTitle: "Autonomous Client-Side App",
+                ogDesc: "Code written by AI, executes only in the browser. Data is fully encrypted and never leaves for the server.",
+                actionBtn: "Press the button",
+                copyBtn: "And copy the result",
+                helpText: "<b>And your dream will come true. I’ll explain everything now.</b></br></br>You need to enter a numeric key in the input field. If I have any data for this key, it will appear on the screen instead of this short explanatory note. Here is an example of a working key: 00111111"
+            },
+            ex: {
+                bg: "background-image: url('ex.png'); background-repeat: no-repeat; background-position: center; background-size: cover; background-attachment: fixed;",
+                ph: "Распродажа деревянных членов. Вводи промокод, товарищ!",
+                title: "Митинский рынок",
+                desc: "",
+                ogTitle: "Митинский рынок",
+                ogDesc: "",
+                actionBtn: "Ширли",
+                copyBtn: "Мырли",
+                helpText: "Уже заворачиваем. Приходи, приезжай, залетай - забирай."
+            }
+        };
 
-</script>
+        const languages = ['ru', 'en', 'ex'];
+        let currentLangIndex = 0;
+        let t = translations['ru'];
+        function toggleLanguage() {
+            currentLangIndex = (currentLangIndex + 1) % languages.length;
+            const lang = languages[currentLangIndex];
+            t = translations[lang]; // Берем переводы для выбранного языка
 
-<script>
-  // Находим элементы на странице
-  const resultText = document.getElementById('result');
-  const copyButton = document.getElementById('copyBtn');
+            // Меняем атрибут языка в HTML
+            document.documentElement.lang = lang;
+            document.getElementById('langBtn').innerText = lang.toUpperCase();
 
-  // Вешаем обработчик клика на кнопку
-  copyButton.addEventListener('click', () => {
-    // Получаем текст из элемента
-    const textToCopy = resultText.innerText;
+            // Переводим <head>
+            document.getElementById('meta-title').innerText = t.title;
+            document.getElementById('meta-desc').setAttribute('content', t.desc);
+            document.getElementById('og-title').setAttribute('content', t.ogTitle);
+            document.getElementById('og-desc').setAttribute('content', t.ogDesc);
 
-    // Копируем текст в буфер обмена
-    navigator.clipboard.writeText(textToCopy)
-      .then(() => {
-        // Меняем текст кнопки для визуального отклика
-        copyButton.textContent = 'Скопировано!';
-        
-        // Возвращаем исходный текст кнопки через 2 секунды
-        setTimeout(() => {
-          copyButton.textContent = 'Копировать результат';
-        }, 2000);
-      })
-      .catch(err => {
-        console.error('Ошибка при копировании: ', err);
-      });
-  });
-</script>
+            // Переводим кнопку ввода
+            document.getElementById('actionBtn').innerText = t.actionBtn;
+            
+            // Переводим кнопку копирования
+            document.getElementById('copyBtn').innerText = t.copyBtn;
+            
+            document.body.style = t.bg;
+            document.getElementById('numberInput').placeholder = t.ph
+        }
 
-<script src="./data.js" charset="UTF-8"></script>
-<script src="./index.js" charset="UTF-8"></script>
+        document.getElementById('numberInput').addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                checkHash();
+            }
+        });
+
+    </script>
+
+    <script>
+        // Находим элементы на странице
+        const resultText = document.getElementById('result');
+        const copyButton = document.getElementById('copyBtn');
+
+        // Вешаем обработчик клика на кнопку
+        copyButton.addEventListener('click', () => {
+            // Получаем текст из элемента
+            const textToCopy = resultText.innerText;
+
+            // Копируем текст в буфер обмена
+            navigator.clipboard.writeText(textToCopy)
+            .catch(err => {
+                console.error('Ошибка при копировании: ', err);
+            });
+        });
+    </script>
+
+    <script src="./data.js" charset="UTF-8"></script>
+    <script src="./index.js" charset="UTF-8"></script>
 
 </body>
 </html>

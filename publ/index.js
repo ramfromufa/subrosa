@@ -70,11 +70,6 @@ async function checkHash() {
     const inputVal = document.getElementById("numberInput").value;
     const resultDiv = document.getElementById("result");
 
-    if (!inputVal) {
-        alert("Пожалуйста, введите число");
-        return;
-    }
-
     try {
         // 1. Вычисляем SHA-256 с помощью Web Crypto API
         const msgBuffer = new TextEncoder().encode(inputVal);
@@ -92,7 +87,7 @@ async function checkHash() {
             resultDiv.style.backgroundColor = "#d4edda";
         }
         else {
-            resultDiv.innerHTML = "Я вас не знаю. Проходите мимо. А еще можете номер своей банковской карты с датой и cvv сюда отправить. Спасибо.";
+            resultDiv.innerHTML = t.helpText;
             resultDiv.style.display = "block";
             resultDiv.style.backgroundColor = "#f8d7da";
         }
