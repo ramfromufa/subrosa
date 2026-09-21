@@ -188,26 +188,55 @@ fi
 systemctl reload nginx
 
 ###############################################################################
+# НАСТРОЙКА CERTBOT И TLS (С ПРОВЕРКОЙ СУЩЕСТВУЮЩЕГО СЕРТИФИКАТА)
+###############################################################################
+
+log_info "Проверка наличия существующего SSL сертификата для $DOMAIN..."
+
+# Проверяем, знает ли certbot о действующем сертификате для этого домена
+if certbot certificates --domain "$DOMAIN" 2>/dev/null | grep -q "VALID: "; then
+    log_info "✓ Действующий SSL сертификат для $DOMAIN уже существует. Пропускаю получение."
+else
+    log_warn "Сертификат не найден или просрочен. Получение SSL сертификата от Let's Encrypt..."
+    
+    certbot certonly \
+        --webroot \
+        -w /var/www/certbot \
+        -d "$DOMAIN" \
+        --agree-tos \
+        --non-interactive \
+        --email "admin@$DOMAIN" \
+        --expand
+
+    if [ $? -ne 0 ]; then
+        log_error "Ошибка при получении сертификата"
+        exit 1
+    fi
+
+    log_info "✓ Сертификат успешно получен!"
+fi
+
+###############################################################################
 # НАСТРОЙКА CERTBOT И TLS
 ###############################################################################
 
-log_info "Получение SSL сертификата от Let's Encrypt для $DOMAIN..."
+#log_info "Получение SSL сертификата от Let's Encrypt для $DOMAIN..."
 
-certbot certonly \
-    --webroot \
-    -w /var/www/certbot \
-    -d "$DOMAIN" \
-    --agree-tos \
-    --non-interactive \
-    --email "admin@$DOMAIN" \
-    --expand
+#certbot certonly \
+#    --webroot \
+#    -w /var/www/certbot \
+#    -d "$DOMAIN" \
+#    --agree-tos \
+#    --non-interactive \
+#    --email "admin@$DOMAIN" \
+#    --expand
 
-if [ $? -ne 0 ]; then
-    log_error "Ошибка при получении сертификата"
-    exit 1
-fi
+#if [ $? -ne 0 ]; then
+#    log_error "Ошибка при получении сертификата"
+#    exit 1
+#fi
 
-log_info "Сертификат успешно получен!"
+#log_info "Сертификат успешно получен!"
 
 ###############################################################################
 # СОЗДАНИЕ ФИНАЛЬНОЙ КОНФИГУРАЦИИ NGINX (с HTTPS)
